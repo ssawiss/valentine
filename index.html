@@ -21,6 +21,24 @@
             background-color: var(--pink-bg);
             display: flex; justify-content: center; align-items: center;
             font-family: 'Poppins', sans-serif; overflow: hidden;
+            position: relative;
+        }
+
+        /* --- HEART STICKERS BACKGROUND --- */
+        .heart-sticker {
+            position: absolute;
+            color: rgba(214, 51, 132, 0.2);
+            font-size: 2rem;
+            user-select: none;
+            z-index: 0;
+            animation: float-hearts 10s linear infinite;
+        }
+
+        @keyframes float-hearts {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
         }
 
         /* --- STAGE 1: ENVELOPE --- */
@@ -28,6 +46,7 @@
             position: relative; cursor: pointer;
             width: 380px; height: 260px;
             z-index: 10; animation: float 3s ease-in-out infinite;
+            transition: opacity 0.8s ease, transform 0.8s ease;
         }
         .envelope-wrapper:hover { animation: shake 0.5s infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
@@ -92,8 +111,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         .coupon.active { opacity: 1; transform: scale(1.2); }
-        
-        /* Acceptance positions (small and to the left) */
         .coupon.accepted-1 { transform: scale(0.6) translate(-350px, -220px); opacity: 0.8; pointer-events: none; border-style: solid; background: #fff0f3; }
         .coupon.accepted-2 { transform: scale(0.6) translate(-350px, 0px); opacity: 0.8; pointer-events: none; border-style: solid; background: #fff0f3; }
 
@@ -114,7 +131,6 @@
         #finalStage h1 { color: var(--accent); font-size: 2.5rem; margin-bottom: 10px; }
         #finalStage p { color: #555; font-size: 1.2rem; }
 
-        .fade-out { opacity: 0; transform: translateY(50px); pointer-events: none; }
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -131,7 +147,7 @@
             <div class="greeting-text">Hey beautiful,</div>
         </div>
         <div class="letter-content">I would like to start by expressing how much I am grateful to have you in my life. I want to thank you for choosing me and sticking by my side through thick and thin, this year we are celebrating our 2nd valentine's day and I right now am reflecting on all the things we have been through, all the hardships we successfully got over and left behind! You make me so happy and i hope i make you happy too, sorry for being hard to deal with sometimes, but i just wanted to tell you that i love you so much baby so...</div>
-        <div class="question">Will you be my valentine?</div>
+        <div class="question" style="text-align: center; font-weight: bold; color: var(--accent); margin-bottom: 15px;">Will you be my valentine?</div>
         <div class="signature-line" id="sig" onclick="startWriting()">Click here to sign</div>
     </div>
 
@@ -163,12 +179,17 @@
     </div>
 
     <script>
+
         function openSequence() {
-            document.getElementById('envelopeWrap').classList.add('fade-out');
+            const env = document.getElementById('envelopeWrap');
+            // Envelope fades and shrinks away first
+            env.style.opacity = '0';
+            env.style.transform = 'scale(0.8) translateY(50px)';
+            
             setTimeout(() => {
-                document.getElementById('envelopeWrap').classList.add('hidden');
+                env.classList.add('hidden');
                 document.getElementById('letterOverlay').classList.add('active');
-            }, 500);
+            }, 800); // Wait for envelope fade to finish
         }
 
         function startWriting() {
@@ -186,7 +207,7 @@
                         setTimeout(() => {
                             document.getElementById('letterOverlay').classList.add('hidden');
                             document.getElementById('cpn1').classList.add('active');
-                        }, 600);
+                        }, 800);
                     }, 1500);
                 }
             }
@@ -197,7 +218,6 @@
             const current = document.getElementById('cpn' + num);
             current.classList.remove('active');
             current.classList.add('accepted-' + num);
-            
             const next = document.getElementById('cpn' + (num + 1));
             if (next) {
                 setTimeout(() => { next.classList.add('active'); }, 400);
@@ -206,39 +226,43 @@
 
         function moveButton() {
             const group = document.getElementById('trappedGroup');
-            // Logic to swap positions by changing flex direction
-            if (group.style.flexDirection === 'row-reverse') {
-                group.style.flexDirection = 'row';
-            } else {
-                group.style.flexDirection = 'row-reverse';
-            }
+            group.style.flexDirection = (group.style.flexDirection === 'row-reverse') ? 'row' : 'row-reverse';
         }
 
         function finalCelebrate() {
-            // Hide the last coupon
             document.getElementById('cpn3').classList.remove('active');
             document.getElementById('cpn1').style.opacity = '0';
             document.getElementById('cpn2').style.opacity = '0';
             
-            // Show final message
             setTimeout(() => {
                 document.getElementById('finalStage').style.display = 'block';
                 
-                // Heart Confetti Explosion
-                const duration = 5 * 1000;
-                const animationEnd = Date.now() + duration;
-                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+                // Impressive Heart Cannon Confetti
+                const end = Date.now() + (5 * 1000);
+                const colors = ['#ff0000', '#ff8fa3', '#d63384', '#ffffff'];
 
-                const randomInRange = (min, max) => Math.random() * (max - min) + min;
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: colors,
+                        shapes: ['circle', 'heart']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: colors,
+                        shapes: ['circle', 'heart']
+                    });
 
-                const interval = setInterval(function() {
-                    const timeLeft = animationEnd - Date.now();
-                    if (timeLeft <= 0) return clearInterval(interval);
-
-                    const particleCount = 50 * (timeLeft / duration);
-                    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-                    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-                }, 250);
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
             }, 500);
         }
     </script>
