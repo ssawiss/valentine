@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Valentine's Surprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --pink-bg: #ffdae0;
+            --envelope-color: #ff8fa3;
+            --envelope-flap: #ffb3c1;
+            --paper-color: #ffffff;
+            --text-color: #444;
+            --accent: #d63384;
+        }
+
+        body, html {
+            height: 100%; margin: 0;
+            background-color: var(--pink-bg);
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Poppins', sans-serif; overflow: hidden;
+        }
+
+        /* --- STAGE 1: ENVELOPE --- */
+        .envelope-wrapper {
+            position: relative; cursor: pointer;
+            width: 380px; height: 260px;
+            z-index: 10; animation: float 3s ease-in-out infinite;
+        }
+        .envelope-wrapper:hover { animation: shake 0.5s infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .envelope {
+            position: relative; width: 100%; height: 100%;
+            background: var(--envelope-color); border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .envelope::before {
+            content: ""; position: absolute; top: 0; left: 0;
+            border-left: 190px solid transparent; border-right: 190px solid transparent;
+            border-top: 130px solid var(--envelope-flap); z-index: 2;
+        }
+        .envelope::after {
+            content: ""; position: absolute; bottom: 0; left: 0;
+            border-left: 190px solid transparent; border-right: 190px solid transparent;
+            border-bottom: 130px solid #ff9fb2; z-index: 1;
+        }
+
+        /* --- STAGE 2: THE LETTER --- */
+        .letter-overlay {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 85%; max-width: 550px; max-height: 90vh;
+            background: var(--paper-color); padding: 35px;
+            box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden;
+            transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            z-index: 100; border-radius: 8px;
+        }
+        .letter-overlay.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+        .letter-header { margin-bottom: 15px; font-family: 'Georgia', serif; }
+        .letter-content { font-family: 'Georgia', serif; line-height: 1.5; font-size: 1.05rem; white-space: pre-wrap; margin-bottom: 25px; }
+        .signature-line {
+            border-bottom: 2px solid #ccc; display: block; width: 250px; margin: 0 auto;
+            padding: 5px; color: var(--accent); font-family: 'Dancing Script', cursive;
+            font-size: 1.4rem; cursor: pointer; text-align: center; min-height: 40px;
+        }
+
+        /* --- STAGE 3: SEQUENTIAL REVEAL --- */
+        .coupon-zone {
+            position: fixed; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none;
+        }
+        .coupon {
+            position: absolute; background: white; border: 4px dashed var(--accent);
+            border-radius: 20px; padding: 20px; text-align: center;
+            width: 300px; height: 180px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 200; opacity: 0; transform: scale(0); pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .coupon.active { opacity: 1; transform: scale(1.2); }
+        
+        /* Acceptance positions (small and to the left) */
+        .coupon.accepted-1 { transform: scale(0.6) translate(-350px, -220px); opacity: 0.8; pointer-events: none; border-style: solid; background: #fff0f3; }
+        .coupon.accepted-2 { transform: scale(0.6) translate(-350px, 0px); opacity: 0.8; pointer-events: none; border-style: solid; background: #fff0f3; }
+
+        .btn-group { display: flex; gap: 15px; margin-top: 20px; position: relative; }
+        button {
+            padding: 10px 25px; border: none; border-radius: 25px;
+            cursor: pointer; font-weight: bold; font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+        }
+        .btn-accept { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(214, 51, 132, 0.3); }
+        .btn-deny { background: #fd0202; color: #f9f5f5; position: relative; }
+
+        /* --- FINAL STAGE --- */
+        #finalStage {
+            display: none; text-align: center; z-index: 300;
+            animation: fadeIn 1s forwards;
+        }
+        #finalStage h1 { color: var(--accent); font-size: 2.5rem; margin-bottom: 10px; }
+        #finalStage p { color: #555; font-size: 1.2rem; }
+
+        .fade-out { opacity: 0; transform: translateY(50px); pointer-events: none; }
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="envelopeWrap" class="envelope-wrapper" onclick="openSequence()">
+        <div class="envelope"></div>
+    </div>
+
+    <div id="letterOverlay" class="letter-overlay">
+        <div class="letter-header">
+            <div class="to-text">To: The love of my life</div>
+            <div class="greeting-text">Hey beautiful,</div>
+        </div>
+        <div class="letter-content">I would like to start by expressing how much I am grateful to have you in my life. I want to thank you for choosing me and sticking by my side through thick and thin, this year we are celebrating our 2nd valentine's day and I right now am reflecting on all the things we have been through, all the hardships we successfully got over and left behind! You make me so happy and i hope i make you happy too, sorry for being hard to deal with sometimes, but i just wanted to tell you that i love you so much baby so...</div>
+        <div class="question">Will you be my valentine?</div>
+        <div class="signature-line" id="sig" onclick="startWriting()">Click here to sign</div>
+    </div>
+
+    <div class="coupon-zone">
+        <div id="cpn1" class="coupon">
+            <div style="font-weight: 600; color: var(--accent); margin-bottom: 5px;">COUPON #1</div>
+            <div style="font-size: 1.1rem;">Free cuddles for life!</div>
+            <div class="btn-group"><button class="btn-accept" onclick="acceptCoupon(1)">Accept</button></div>
+        </div>
+
+        <div id="cpn2" class="coupon">
+            <div style="font-weight: 600; color: var(--accent); margin-bottom: 5px;">COUPON #2</div>
+            <div style="font-size: 1.1rem;">Free kisses for life!</div>
+            <div class="btn-group"><button class="btn-accept" onclick="acceptCoupon(2)">Accept</button></div>
+        </div>
+
+        <div id="cpn3" class="coupon">
+            <div style="font-weight: 600; color: var(--accent); margin-bottom: 10px;">YOU ARE FOREVER TRAPPED WITH ME 😈😈😈(i dare you to deny!)</div>
+            <div class="btn-group" id="trappedGroup">
+                <button class="btn-accept" onclick="finalCelebrate()">Accept</button>
+                <button class="btn-deny" id="denyBtn" onmouseover="moveButton()">Deny</button>
+            </div>
+        </div>
+
+        <div id="finalStage">
+            <h1>YAY! ❤️</h1>
+            <p id="customText">I knew you couldn't say no! You're stuck with me forever now.😈</p>
+        </div>
+    </div>
+
+    <script>
+        function openSequence() {
+            document.getElementById('envelopeWrap').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('envelopeWrap').classList.add('hidden');
+                document.getElementById('letterOverlay').classList.add('active');
+            }, 500);
+        }
+
+        function startWriting() {
+            const sig = document.getElementById('sig');
+            const fullText = "Salma Sayouti ❤️";
+            sig.innerHTML = ""; sig.style.borderBottom = "none";
+            let i = 0;
+            function typeWriter() {
+                if (i < fullText.length) {
+                    sig.innerHTML += fullText.charAt(i); i++;
+                    setTimeout(typeWriter, 70);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('letterOverlay').classList.remove('active');
+                        setTimeout(() => {
+                            document.getElementById('letterOverlay').classList.add('hidden');
+                            document.getElementById('cpn1').classList.add('active');
+                        }, 600);
+                    }, 1500);
+                }
+            }
+            typeWriter();
+        }
+
+        function acceptCoupon(num) {
+            const current = document.getElementById('cpn' + num);
+            current.classList.remove('active');
+            current.classList.add('accepted-' + num);
+            
+            const next = document.getElementById('cpn' + (num + 1));
+            if (next) {
+                setTimeout(() => { next.classList.add('active'); }, 400);
+            }
+        }
+
+        function moveButton() {
+            const group = document.getElementById('trappedGroup');
+            // Logic to swap positions by changing flex direction
+            if (group.style.flexDirection === 'row-reverse') {
+                group.style.flexDirection = 'row';
+            } else {
+                group.style.flexDirection = 'row-reverse';
+            }
+        }
+
+        function finalCelebrate() {
+            // Hide the last coupon
+            document.getElementById('cpn3').classList.remove('active');
+            document.getElementById('cpn1').style.opacity = '0';
+            document.getElementById('cpn2').style.opacity = '0';
+            
+            // Show final message
+            setTimeout(() => {
+                document.getElementById('finalStage').style.display = 'block';
+                
+                // Heart Confetti Explosion
+                const duration = 5 * 1000;
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) return clearInterval(interval);
+
+                    const particleCount = 50 * (timeLeft / duration);
+                    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+                }, 250);
+            }, 500);
+        }
+    </script>
+</body>
+</html>
